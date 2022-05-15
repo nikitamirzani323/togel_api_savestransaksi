@@ -17,4 +17,5 @@ type Controller_clientSaveTogel struct {
 	Totalbayarbet   int    `json:"totalbayarbet"`
 	List4d          string `json:"list4d"`
 	Hostname        string `json:"hostname"`
+	Token           string `json:"token"`
 }

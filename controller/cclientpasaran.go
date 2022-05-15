@@ -10,6 +10,7 @@ import (
 	"bitbucket.org/isbtotogroup/apisavetransaksi_go/helpers"
 	"bitbucket.org/isbtotogroup/apisavetransaksi_go/model"
 	"github.com/buger/jsonparser"
+	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -22,6 +23,18 @@ const fieldresult_redis = "listresult_"
 const fieldconfig_redis = "config_"
 const fieldinvoice_redis = "listinvoice_"
 const fieldlimit_redis = "limitpasaran_"
+
+type responseaxios struct {
+	Status          int    `json:"status"`
+	Token           string `json:"token"`
+	Member_company  string `json:"member_company"`
+	Member_username string `json:"member_username"`
+	Member_credit   int    `json:"member_credit"`
+}
+type responseaxioserror struct {
+	Status  int    `json:"status"`
+	Message string `json:"message"`
+}
 
 func SaveTogel(c *fiber.Ctx) error {
 	client := new(entities.Controller_clientSaveTogel)
@@ -37,9 +50,11 @@ func SaveTogel(c *fiber.Ctx) error {
 			"record":  nil,
 		})
 	}
+	_, _, clientdompet := Fetch_apimoney("qC5YmBvXzabGp34jJlKvnC6wCrr3pLCwBzsLoSzl4k=")
+
 	result, err := model.Savetransaksi(
 		client.Client_Username,
-		client.Client_Company, client.Idtrxkeluaran, client.Idcomppasaran, client.Devicemember, client.Formipaddress, client.Timezone, client.Totalbayarbet, client.List4d)
+		client.Client_Company, client.Idtrxkeluaran, client.Idcomppasaran, client.Devicemember, client.Formipaddress, client.Timezone, clientdompet, client.Totalbayarbet, client.List4d)
 	if err != nil {
 		// panic(err.Error())
 		c.Status(fiber.StatusBadRequest)
@@ -51,6 +66,22 @@ func SaveTogel(c *fiber.Ctx) error {
 	}
 	_deleteredisclient(client.Client_Company, client.Idtrxkeluaran, client.Client_Username, client.Pasarancode, client.Pasaranperiode)
 	return c.JSON(result)
+}
+func Fetch_apimoney(token string) (string, string, int) {
+	axios := resty.New()
+	resp, err := axios.R().
+		SetResult(responseaxios{}).
+		SetError(responseaxioserror{}).
+		SetHeader("Content-Type", "application/json").
+		SetBody(map[string]interface{}{
+			"token": token,
+		}).
+		Post("http://128.199.241.112:6061/api/servicetoken")
+	if err != nil {
+		log.Println(err.Error())
+	}
+	result := resp.Result().(*responseaxios)
+	return result.Member_company, result.Member_username, result.Member_credit
 }
 func _domainsecurity(nmdomain string) bool {
 	log.Printf("Domain Client : %s", nmdomain)

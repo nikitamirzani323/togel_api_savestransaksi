@@ -100,7 +100,7 @@ type temp_data struct {
 	Devicetogel   string
 }
 
-func Savetransaksi(client_username, client_company, idtrxkeluaran, idcomppasaran, devicemember, formipaddress, timezone string, totalbayarbet int, list4d string) (helpers.ResponseSaveTransaksi, error) {
+func Savetransaksi(client_username, client_company, idtrxkeluaran, idcomppasaran, devicemember, formipaddress, timezone string, clientdompet, totalbayarbet int, list4d string) (helpers.ResponseSaveTransaksi, error) {
 	var res helpers.ResponseSaveTransaksi
 	var obj temp_data
 	var arraobj []temp_data
@@ -113,7 +113,7 @@ func Savetransaksi(client_username, client_company, idtrxkeluaran, idcomppasaran
 	msg := "Failed"
 	msg_nomor := ""
 	totalbelanja := totalbayarbet
-	dompet := 5000000
+	dompet := clientdompet
 	pasaran_code := ""
 	limittotal_togel4d := 0
 	limittotal_togel3d := 0
