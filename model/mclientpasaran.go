@@ -163,7 +163,7 @@ func Savetransaksi(client_username, client_company, idtrxkeluaran, idcomppasaran
 	limit_togeldasar := 0
 	limit_togelshio := 0
 	if int(dompet) < int(totalbelanja) {
-		msg = "Balance Anda Tidak Cukup"
+		msg = "Credit Anda Tidak Cukup"
 		flag_loop = true
 	}
 	// _, _, view_client_invoice := Get_mappingdatabase(client_company)
@@ -653,7 +653,7 @@ func _doJobInsert(fieldtable string, jobs <-chan datajobs, results chan<- datare
 func _checkpasaran(client_company, pasaran_code string) string {
 	var myDays = []string{"minggu", "senin", "selasa", "rabu", "kamis", "jumat", "sabtu"}
 	statuspasaran := "ONLINE"
-
+	flag := false
 	con := db.CreateCon()
 	ctx := context.Background()
 
@@ -677,8 +677,8 @@ func _checkpasaran(client_company, pasaran_code string) string {
 	helpers.ErrorCheck(err)
 	for rowpasaran.Next() {
 		var (
-			idcomppasaran, nmpasarantogel, jamtutup, jamopen string
-			idtrxkeluaran, keluaranperiode, haripasaran      string
+			idcomppasaran, nmpasarantogel, jamtutup, jamopen         string
+			tglkeluaran, idtrxkeluaran, keluaranperiode, haripasaran string
 		)
 
 		err = rowpasaran.Scan(&idcomppasaran, &nmpasarantogel, &jamtutup, &jamopen)
@@ -686,33 +686,46 @@ func _checkpasaran(client_company, pasaran_code string) string {
 
 		sqlkeluaran := `
 			SELECT 
-			idtrxkeluaran, keluaranperiode
+			idtrxkeluaran, datekeluaran, keluaranperiode
 			FROM ` + tbl_trx_keluaran + `  
 			WHERE idcompany = ?
 			AND idcomppasaran = ?
 			AND keluarantogel = ''
 			LIMIT 1
 		`
-		err := con.QueryRowContext(ctx, sqlkeluaran, client_company, idcomppasaran).Scan(&idtrxkeluaran, &keluaranperiode)
-		helpers.ErrorCheck(err)
+		row := con.QueryRowContext(ctx, sqlkeluaran, idcomppasaran)
+		switch err := row.Scan(&idtrxkeluaran, &tglkeluaran, &keluaranperiode); err {
+		case sql.ErrNoRows:
+			flag = false
+		case nil:
+			flag = true
+		default:
+			flag = false
+		}
+		if flag {
+			jamtutupdoc, _ := goment.New(tglkeluaran)
+			sqlpasaranonline := `
+				SELECT
+					haripasaran
+				FROM ` + config.DB_tbl_mst_company_game_pasaran_offline + ` 
+				WHERE idcomppasaran = ?
+				AND idcompany = ? 
+				AND haripasaran = ? 
+			`
 
-		sqlpasaranonline := `
-			SELECT
-				haripasaran
-			FROM ` + config.DB_tbl_mst_company_game_pasaran_offline + ` 
-			WHERE idcomppasaran = ?
-			AND idcompany = ? 
-			AND haripasaran = ? 
-		`
+			errpasaranonline := con.QueryRowContext(ctx, sqlpasaranonline, idcomppasaran, client_company, daynowhari).Scan(&haripasaran)
+			jamtutupdoc2 := jamtutupdoc.Format("YYYY-MM-DD") + " " + jamtutup
+			taiskrg2 := tglnow.Format("YYYY-MM-DD HH:mm:ss")
+			if errpasaranonline != sql.ErrNoRows {
+				tglskrg := tglnow.Format("YYYY-MM-DD HH:mm:ss")
+				jamtutup := tglnow.Format("YYYY-MM-DD") + " " + jamtutup
+				jamopen := tglnow.Format("YYYY-MM-DD") + " " + jamopen
 
-		errpasaranonline := con.QueryRowContext(ctx, sqlpasaranonline, idcomppasaran, client_company, daynowhari).Scan(&haripasaran)
-
-		if errpasaranonline != sql.ErrNoRows {
-			tglskrg := tglnow.Format("YYYY-MM-DD HH:mm:ss")
-			jamtutup := tglnow.Format("YYYY-MM-DD") + " " + jamtutup
-			jamopen := tglnow.Format("YYYY-MM-DD") + " " + jamopen
-
-			if tglskrg >= jamtutup && tglskrg <= jamopen {
+				if tglskrg >= jamtutup && tglskrg <= jamopen {
+					statuspasaran = "OFFLINE"
+				}
+			}
+			if taiskrg2 > jamtutupdoc2 {
 				statuspasaran = "OFFLINE"
 			}
 		}
