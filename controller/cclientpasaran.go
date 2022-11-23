@@ -122,6 +122,7 @@ func _deleteredisclient(company, idtrxkeluaran, username, pasarancode, pasaranpe
 	log.Printf("DELETE REDIS LIMIT %d\n", val_limit)
 
 	//AGEN
+	val_agen_dashboard := helpers.DeleteRedis("LISTDASHBOARDPASARAN_AGENT_" + strings.ToLower(company))
 	val_agen := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran)
 	val_agenlistmember := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran + "_LISTMEMBER")
 	val_agenlistbettable := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran + "_LISTBETTABLE")
@@ -143,6 +144,7 @@ func _deleteredisclient(company, idtrxkeluaran, username, pasarancode, pasaranpe
 	val_agenall := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran + "_LISTBET_all")
 	val_agenwinner := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran + "_LISTBET_winner")
 	val_agencancel := helpers.DeleteRedis("LISTPERIODE_AGENT_" + strings.ToLower(company) + "_INVOICE_" + idtrxkeluaran + "_LISTBET_cancel")
+	log.Printf("DELETE REDIS AGEN DASHBOARD %d\n", val_agen_dashboard)
 	log.Printf("DELETE REDIS AGEN PERIODE %d\n", val_agen)
 	log.Printf("DELETE REDIS AGEN PERIODE LISTMEMBER %d\n", val_agenlistmember)
 	log.Printf("DELETE REDIS AGEN PERIODE LISTBETTABEL %d\n", val_agenlistbettable)

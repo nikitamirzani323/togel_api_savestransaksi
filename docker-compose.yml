@@ -1,32 +1,9 @@
-version: '3.3'
+version: '2'
 
 services:
-  apiclientsavetransaksi:
+  toto-api-savetransaksi:
     image: toto_api_client_savetransaksi:0.0.2
-    build: "."
+    build: .
     ports:
-      - "7172"
-    restart: "always"
-    networks:
-      - "totoapiclientsavetransaksi.network"
-    deploy:
-      replicas: 3
-      restart_policy:
-        max_attempts: 3
-        condition: on-failure       
-      update_config:
-        parallelism: 3
-        delay: 5s
-  nginx:
-    image: nginx:latest
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - apiclientsavetransaksi
-    ports:
-      - "7077:7077"
+      - 7077:7077
     restart: always
-    networks:
-      - "totoapiclientsavetransaksi.network"
-networks:
-  totoapiclientsavetransaksi.network:
